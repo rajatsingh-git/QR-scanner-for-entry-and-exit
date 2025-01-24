@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner for Student Entry/Exit</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.7/html5-qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #00c6ff, #7db2f1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+        }
+
+        h1 {
+            font-size: 3em;
+            font-weight: bold;
+            margin-top: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        p {
+            font-size: 1.5em;
+            margin: 10px 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        select {
+            margin: 20px;
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        #reader {
+            width: 500px;
+            margin: 20px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        footer {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code Scanner</h1>
+    <p>Scan the QR code to log entry/exit:</p>
+    
+    <select id="entry-exit" style="margin: 20px; padding: 10px; font-size: 1em;">
+        <option value="entry">Entry</option>
+        <option value="exit">Exit</option>
+    </select>
+
+    <div style="width: 500px;" id="reader"></div>
+    
+
+    <script type="text/javascript">
+        const scanner = new Html5Qrcode("reader");
+
+        async function onScanSuccess(decodedText, decodedResult) {
+            const entryExit = document.getElementById('entry-exit').value;
+
+            // Prepare the data to be sent
+            const data = {
+                qr_code: decodedText,
+                entry_exit: entryExit
+            };
+
+            // Send the data to the server
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert(`Scan successful! QR Code: ${decodedText}`);
+                } else {
+                    alert('Error submitting data. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Network error. Please try again.');
+            }
+
+            // Resume scanning
+            scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+        }
+
+        // Initialize scanner
+        scanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            onScanSuccess
+        ).catch((err) => {
+            console.error('Error starting the scanner:', err);
+        });
+    </script>
+    <footer>
+        &copy; 2024 QR Code Scanner
+    </footer>
+</body>
+</html>
